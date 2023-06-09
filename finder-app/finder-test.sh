@@ -44,7 +44,7 @@ then
 	if [ -d "$WRITEDIR" ]
 	then
 		echo "$WRITEDIR created"
-	else
+	elsef
 		exit 1
 	fi
 fi

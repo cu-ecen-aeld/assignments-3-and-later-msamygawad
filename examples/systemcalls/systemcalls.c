@@ -9,15 +9,23 @@
 */
 bool do_system(const char *cmd)
 {
-
 /*
  * TODO  add your code here
  *  Call the system() function with the command set in the cmd
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    int res = system(cmd);
+    bool retrunVal;
+    if(res != 0 || cmd == NULL){
+        perror("Error : ");
+        retrunVal = false;
+    }
+    else
+        retrunVal = true;
 
-    return true;
+    return retrunVal;
+    
 }
 
 /**
@@ -58,10 +66,41 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    bool returnVal = true;
+
+    pid_t pid;
+    pid = fork();
+
+    //faild to fork
+    if (pid == -1){
+        returnVal = false;
+        perror("Error : ");
+    }
+
+    //sucess to fork and running child process
+    else if (pid == 0){
+        int exe_ret ;
+        exe_ret = execv(command[0], command);
+        if (exe_ret == -1)
+            exit(EXIT_FAILURE); // error in fucntion execution
+    }
+
+    //sucess to fork and running parent  process
+    else{
+        int wait_ret;
+        int child_status;
+        wait_ret= waitpid (pid, &child_status, 0);
+
+        //if waitpid() call failed (-1)  OR  return status from child not equal 0 (successful exit)
+        if (wait_ret == -1 || WEXITSTATUS(child_status) != 0){
+            returnVal = false;
+            perror("Error : ");
+        }
+    }
 
     va_end(args);
 
-    return true;
+    return returnVal;
 }
 
 /**
@@ -83,7 +122,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
     command[count] = command[count];
-
+    
 
 /*
  * TODO
@@ -92,8 +131,46 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT , 0600);
+    int exe_ret ;
+    int wait_ret;
+    int child_status;
+    bool returnVal = true;
 
+    pid_t pid;
+    pid = fork();
+
+    //faild to fork
+    if (pid == -1){
+        returnVal = false;
+        perror("Error : ");
+    }
+        
+    //sucess to fork and running child process
+    else if (pid == 0){
+        int dup_ret = dup2(fd,STDOUT_FILENO);
+        //if there is a problem in redirection of STD_OUTPUT to file, then terminate the parent process
+        if (dup_ret < 0)
+            exit(EXIT_FAILURE);
+        else{
+            close(fd);
+            exe_ret = execv(command[0], command);
+            if (exe_ret == -1)
+                exit(EXIT_FAILURE); // error in fucntion execution
+        }
+    }
+
+    //sucess to fork and running parent  process
+    else{
+        wait_ret= waitpid (pid, &child_status, 0);
+        //if waitpid() call failed (-1)  OR  return status from child not equal 0 (successful exit)
+        if  (wait_ret == -1 || 
+            (WIFEXITED(child_status) && WEXITSTATUS(child_status) != 0)){
+            perror("Error : ");
+            returnVal = false;
+        }
+    }
     va_end(args);
 
-    return true;
+    return returnVal;
 }
