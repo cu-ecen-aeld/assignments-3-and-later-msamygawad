@@ -2,7 +2,7 @@
 #include <pthread.h>
 
 /**
- * This structure should be dynamically allocated and passed as
+ * This structure shoxuld be dynamically allocated and passed as
  * an argument to your thread using pthread_create.
  * It should be returned by your thread so it can be freed by
  * the joiner thread.
@@ -14,7 +14,10 @@ struct thread_data{
      * between the start_thread_obtaining_mutex function and
      * your thread implementation.
      */
-
+    pthread_mutex_t *thread_mutex;   
+    pthread_t *thread;
+    unsigned int wait_to_release_ms;
+    unsigned int wait_to_obtain_ms;
     /**
      * Set to true if the thread completed with success, false
      * if an error occurred.
