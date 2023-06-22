@@ -1,4 +1,4 @@
-writer: writer.c
+all: writer.c
 
 ifdef CROSS_COMPILE
 	$(CROSS_COMPILE)gcc -o writer writer.c
